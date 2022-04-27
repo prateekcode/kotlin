@@ -11,7 +11,10 @@ import org.gradle.api.file.ProjectLayout
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
+import org.gradle.work.InputChanges
+import org.gradle.work.NormalizeLineEndings
 import org.gradle.workers.WorkerExecutor
+import org.jetbrains.kotlin.build.report.metrics.BuildPerformanceMetric
 import org.jetbrains.kotlin.cli.common.arguments.K2JSCompilerArguments
 import org.jetbrains.kotlin.cli.common.arguments.parseCommandLineArguments
 import org.jetbrains.kotlin.compilerRunner.ArgumentUtils
@@ -25,6 +28,7 @@ import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsBinaryMode
 import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsBinaryMode.DEVELOPMENT
 import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsBinaryMode.PRODUCTION
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
+import org.jetbrains.kotlin.gradle.tasks.TaskOutputsBackup
 import org.jetbrains.kotlin.gradle.utils.getValue
 import org.jetbrains.kotlin.gradle.utils.toHexString
 import org.jetbrains.kotlin.statistics.metrics.BooleanMetrics
@@ -159,6 +163,24 @@ abstract class KotlinJsIrLink @Inject constructor(
             .dropLastWhile { it.isEmpty() }
             .toTypedArray()
             .filterNot { it.isEmpty() }
+    }
+
+    override fun callCompilerAsync(
+        args: K2JSCompilerArguments,
+        kotlinSources: Set<File>,
+        inputChanges: InputChanges,
+        taskOutputsBackup: TaskOutputsBackup?
+    ) {
+        super.callCompilerAsync(args, kotlinSources, inputChanges, taskOutputsBackup)
+        val reporter = metrics.get()
+        normalizedDestinationDirectory.get().asFile.walkTopDown()
+            .filter { it.isFile }
+            .filter { it.extension != "map" }
+            .map { it.length() }
+            .sum()
+            .let {
+                reporter.addMetric(BuildPerformanceMetric.COMPILE_OUTPUT_SIZE, it)
+            }
     }
 
     override fun setupCompilerArgs(args: K2JSCompilerArguments, defaultsOnly: Boolean, ignoreClasspathResolutionErrors: Boolean) {
