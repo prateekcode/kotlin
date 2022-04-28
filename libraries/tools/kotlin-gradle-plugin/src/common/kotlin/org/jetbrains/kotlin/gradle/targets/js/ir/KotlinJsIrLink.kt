@@ -165,24 +165,6 @@ abstract class KotlinJsIrLink @Inject constructor(
             .filterNot { it.isEmpty() }
     }
 
-    override fun callCompilerAsync(
-        args: K2JSCompilerArguments,
-        kotlinSources: Set<File>,
-        inputChanges: InputChanges,
-        taskOutputsBackup: TaskOutputsBackup?
-    ) {
-        super.callCompilerAsync(args, kotlinSources, inputChanges, taskOutputsBackup)
-        val reporter = metrics.get()
-        normalizedDestinationDirectory.get().asFile.walkTopDown()
-            .filter { it.isFile }
-            .filter { it.extension != "map" }
-            .map { it.length() }
-            .sum()
-            .let {
-                reporter.addMetric(BuildPerformanceMetric.COMPILE_OUTPUT_SIZE, it)
-            }
-    }
-
     override fun setupCompilerArgs(args: K2JSCompilerArguments, defaultsOnly: Boolean, ignoreClasspathResolutionErrors: Boolean) {
         when (mode) {
             PRODUCTION -> {

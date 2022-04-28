@@ -344,7 +344,7 @@ class CompileServiceServerSideImpl(
         createServices = { facade: CompilerCallbackServicesFacadeClientSide, eventMgr, profiler ->
             createCompileServices(facade, eventMgr, profiler)
         },
-        getICReporter = ::getICReporterAsync
+        getICReporter = { a, b, c -> getICReporterAsync(a, b, c as IncrementalCompilationOptions) }
     )
 
     override suspend fun leaseReplSession(
