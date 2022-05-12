@@ -26,37 +26,33 @@ import java.util.*
 fun getBuildReporter(
     servicesFacade: CompilerServicesFacadeBase,
     compilationResults: CompilationResults,
-    compilationOptions: CompilationOptions
+    compilationOptions: IncrementalCompilationOptions
 ): RemoteBuildReporter {
+    val root = compilationOptions.modulesInfo.projectRoot
     val reporters = ArrayList<RemoteICReporter>()
+
+    if (ReportCategory.IC_MESSAGE.code in compilationOptions.reportCategories) {
+        val isVerbose = compilationOptions.reportSeverity == ReportSeverity.DEBUG.code
+        reporters.add(DebugMessagesICReporter(servicesFacade, root, isVerbose = isVerbose))
+    }
 
     val requestedResults = compilationOptions
         .requestedCompilationResults
         .mapNotNullTo(HashSet()) { resultCode ->
             CompilationResultCategory.values().getOrNull(resultCode)
         }
-
-    if (compilationOptions is IncrementalCompilationOptions) {
-        val root = compilationOptions.modulesInfo.projectRoot
-
-        if (ReportCategory.IC_MESSAGE.code in compilationOptions.reportCategories) {
-            val isVerbose = compilationOptions.reportSeverity == ReportSeverity.DEBUG.code
-            reporters.add(DebugMessagesICReporter(servicesFacade, root, isVerbose = isVerbose))
-        }
-
-        for (requestedResult in requestedResults) {
-            when (requestedResult) {
-                CompilationResultCategory.IC_COMPILE_ITERATION -> {
-                    reporters.add(CompileIterationICReporter(compilationResults))
-                }
-                CompilationResultCategory.BUILD_REPORT_LINES -> {
-                    reporters.add(BuildReportICReporter(compilationResults, root))
-                }
-                CompilationResultCategory.VERBOSE_BUILD_REPORT_LINES -> {
-                    reporters.add(BuildReportICReporter(compilationResults, root, isVerbose = true))
-                }
-                CompilationResultCategory.BUILD_METRICS -> {
-                }
+    for (requestedResult in requestedResults) {
+        when (requestedResult) {
+            CompilationResultCategory.IC_COMPILE_ITERATION -> {
+                reporters.add(CompileIterationICReporter(compilationResults))
+            }
+            CompilationResultCategory.BUILD_REPORT_LINES -> {
+                reporters.add(BuildReportICReporter(compilationResults, root))
+            }
+            CompilationResultCategory.VERBOSE_BUILD_REPORT_LINES -> {
+                reporters.add(BuildReportICReporter(compilationResults, root, isVerbose = true))
+            }
+            CompilationResultCategory.BUILD_METRICS -> {
             }
         }
     }

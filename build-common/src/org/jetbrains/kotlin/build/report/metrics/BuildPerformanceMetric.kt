@@ -13,7 +13,6 @@ enum class BuildPerformanceMetric(val parent: BuildPerformanceMetric? = null, va
         LOOKUP_SIZE(CACHE_DIRECTORY_SIZE, "Lookups size", type = SizeMetricType.BYTES),
         SNAPSHOT_SIZE(CACHE_DIRECTORY_SIZE, "ABI snapshot size", type = SizeMetricType.BYTES),
 
-    COMPILE_OUTPUT_SIZE(readableString = "Total size of the compilation output", type = SizeMetricType.BYTES),
     BUNDLE_SIZE(readableString = "Total size of the final bundle", type = SizeMetricType.BYTES),
 
     COMPILE_ITERATION(parent = null, "Total compiler iteration", type = SizeMetricType.NUMBER),
