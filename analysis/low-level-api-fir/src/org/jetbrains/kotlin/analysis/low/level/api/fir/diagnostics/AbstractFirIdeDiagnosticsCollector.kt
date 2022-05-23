@@ -14,11 +14,15 @@ import org.jetbrains.kotlin.fir.analysis.checkers.declaration.ComposedDeclaratio
 import org.jetbrains.kotlin.fir.analysis.checkers.declaration.DeclarationCheckers
 import org.jetbrains.kotlin.fir.analysis.checkers.expression.ComposedExpressionCheckers
 import org.jetbrains.kotlin.fir.analysis.checkers.expression.ExpressionCheckers
+import org.jetbrains.kotlin.fir.analysis.checkers.type.ComposedTypeCheckers
 import org.jetbrains.kotlin.fir.analysis.checkers.type.TypeCheckers
 import org.jetbrains.kotlin.fir.analysis.collectors.AbstractDiagnosticCollector
 import org.jetbrains.kotlin.fir.analysis.collectors.components.*
+import org.jetbrains.kotlin.fir.analysis.extensions.FirAdditionalCheckersExtension
+import org.jetbrains.kotlin.fir.analysis.extensions.additionalCheckers
 import org.jetbrains.kotlin.fir.analysis.jvm.checkers.JvmDeclarationCheckers
 import org.jetbrains.kotlin.fir.analysis.jvm.checkers.JvmExpressionCheckers
+import org.jetbrains.kotlin.fir.extensions.extensionService
 import org.jetbrains.kotlin.platform.SimplePlatform
 import org.jetbrains.kotlin.platform.jvm.JvmPlatform
 
@@ -41,24 +45,28 @@ private object CheckersFactory {
     ): List<AbstractDiagnosticCollectorComponent> {
         val module = session.firKtModuleBasedModuleData.ktModule
         val platform = module.platform.componentPlatforms.first()
-        val declarationCheckers = createDeclarationCheckers(useExtendedCheckers, platform)
-        val expressionCheckers = createExpressionCheckers(useExtendedCheckers, platform)
-        val typeCheckers = createTypeCheckers(useExtendedCheckers)
+        val extensionCheckers = session.extensionService.additionalCheckers
+        val declarationCheckers = createDeclarationCheckers(useExtendedCheckers, platform, extensionCheckers)
+        val expressionCheckers = createExpressionCheckers(useExtendedCheckers, platform, extensionCheckers)
+        val typeCheckers = createTypeCheckers(useExtendedCheckers, extensionCheckers)
 
-        @OptIn(ExperimentalStdlibApi::class)
         return buildList {
             if (!useExtendedCheckers) {
                 add(ErrorNodeDiagnosticCollectorComponent(session, reporter))
             }
             add(DeclarationCheckersDiagnosticComponent(session, reporter, declarationCheckers))
             add(ExpressionCheckersDiagnosticComponent(session, reporter, expressionCheckers))
-            typeCheckers?.let { add(TypeCheckersDiagnosticComponent(session, reporter, it)) }
+            add(TypeCheckersDiagnosticComponent(session, reporter, typeCheckers))
             add(ControlFlowAnalysisDiagnosticComponent(session, reporter, declarationCheckers))
         }
     }
 
 
-    private fun createDeclarationCheckers(useExtendedCheckers: Boolean, platform: SimplePlatform): DeclarationCheckers {
+    private fun createDeclarationCheckers(
+        useExtendedCheckers: Boolean,
+        platform: SimplePlatform,
+        extensionCheckers: List<FirAdditionalCheckersExtension>
+    ): DeclarationCheckers {
         return if (useExtendedCheckers) {
             ExtendedDeclarationCheckers
         } else {
@@ -69,11 +77,16 @@ private object CheckersFactory {
                     else -> {
                     }
                 }
+                addAll(extensionCheckers.map { it.declarationCheckers })
             }
         }
     }
 
-    private fun createExpressionCheckers(useExtendedCheckers: Boolean, platform: SimplePlatform): ExpressionCheckers {
+    private fun createExpressionCheckers(
+        useExtendedCheckers: Boolean,
+        platform: SimplePlatform,
+        extensionCheckers: List<FirAdditionalCheckersExtension>
+    ): ExpressionCheckers {
         return if (useExtendedCheckers) {
             ExtendedExpressionCheckers
         } else {
@@ -84,15 +97,20 @@ private object CheckersFactory {
                     else -> {
                     }
                 }
+                addAll(extensionCheckers.map { it.expressionCheckers })
             }
         }
     }
 
-    private fun createTypeCheckers(useExtendedCheckers: Boolean): TypeCheckers? =
-        if (useExtendedCheckers) ExtendedTypeCheckers else CommonTypeCheckers
+    private fun createTypeCheckers(useExtendedCheckers: Boolean, extensionCheckers: List<FirAdditionalCheckersExtension>): TypeCheckers {
+        if (useExtendedCheckers) return ExtendedTypeCheckers
+        return createTypeCheckers {
+            add(CommonTypeCheckers)
+            addAll(extensionCheckers.map { it.typeCheckers })
+        }
+    }
 
 
-    @OptIn(ExperimentalStdlibApi::class)
     private inline fun createDeclarationCheckers(
         createDeclarationCheckers: MutableList<DeclarationCheckers>.() -> Unit
     ): DeclarationCheckers =
@@ -109,7 +127,6 @@ private object CheckersFactory {
         }
     }
 
-    @OptIn(ExperimentalStdlibApi::class)
     private inline fun createExpressionCheckers(
         createExpressionCheckers: MutableList<ExpressionCheckers>.() -> Unit
     ): ExpressionCheckers = createExpressionCheckers(buildList(createExpressionCheckers))
@@ -120,6 +137,20 @@ private object CheckersFactory {
             1 -> expressionCheckers.single()
             else -> ComposedExpressionCheckers().apply {
                 expressionCheckers.forEach(::register)
+            }
+        }
+    }
+
+    private inline fun createTypeCheckers(
+        createTypeCheckers: MutableList<TypeCheckers>.() -> Unit
+    ): TypeCheckers = createTypeCheckers(buildList(createTypeCheckers))
+
+    @OptIn(CheckersComponentInternal::class)
+    private fun createTypeCheckers(typeCheckers: List<TypeCheckers>): TypeCheckers {
+        return when (typeCheckers.size) {
+            1 -> typeCheckers.single()
+            else -> ComposedTypeCheckers().apply {
+                typeCheckers.forEach(::register)
             }
         }
     }
