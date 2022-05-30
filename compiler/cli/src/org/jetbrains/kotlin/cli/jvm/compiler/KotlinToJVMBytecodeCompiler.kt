@@ -236,8 +236,8 @@ object KotlinToJVMBytecodeCompiler {
     fun analyze(environment: KotlinCoreEnvironment): AnalysisResult? {
         val collector = environment.messageCollector
         val sourceFiles = ProcessSourcesBeforeCompilingExtension.getInstances(environment.project)
-            .fold(environment.getSourceFiles() as Collection<KtFile>) { r, p ->
-                p.processSources(r, environment.configuration)
+            .fold(environment.getSourceFiles() as Collection<KtFile>) { files, extension ->
+                extension.processSources(files, environment.configuration)
             }
 
         // Can be null for Scripts/REPL
