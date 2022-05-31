@@ -197,7 +197,7 @@ class ReplInterpreter(
                             else -> {
                                 val firstError = evalResult.reports.find { it.isError() }
                                 evalResult.reportToMessageCollector()
-                                ReplEvalResult.Error.Runtime(firstError?.message ?: "", firstError?.exception?.let { it as? Exception })
+                                ReplEvalResult.Error.Runtime(firstError?.message ?: "", firstError?.exception)
                             }
                         }
                     }
