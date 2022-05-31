@@ -21,7 +21,6 @@ class JvmCliReplShellExtension : ShellExtension {
         configuration: CompilerConfiguration,
         projectEnvironment: JavaCoreProjectEnvironment
     ): ExitCode {
- //       configuration.put(JVMConfigurationKeys.IR, false)
         ReplFromTerminal.run(projectEnvironment, configuration)
         return ExitCode.OK
     }
