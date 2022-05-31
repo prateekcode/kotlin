@@ -239,7 +239,6 @@ enum class LanguageFeature(
     ForbidRecursiveDelegateExpressions(KOTLIN_1_7, kind = BUG_FIX),
     KotlinFunInterfaceConstructorReference(KOTLIN_1_7),
     SuspendOnlySamConversions(KOTLIN_1_7),
-    WarnAboutUnsupportedScriptsInSourceRoots(KOTLIN_1_7, kind = OTHER), // KT-52525
 
     // 1.8
 

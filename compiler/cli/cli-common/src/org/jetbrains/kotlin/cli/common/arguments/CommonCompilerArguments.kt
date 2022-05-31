@@ -512,7 +512,6 @@ abstract class CommonCompilerArguments : CommonToolArguments() {
             }
 
             if (allowAnyScriptsInSourceRoots) {
-                put(LanguageFeature.WarnAboutUnsupportedScriptsInSourceRoots, LanguageFeature.State.DISABLED)
                 put(LanguageFeature.SkipUnsupportedScriptsInSourceRoots, LanguageFeature.State.DISABLED)
             }
 
