@@ -30,7 +30,7 @@ internal sealed class RangesWritingStrategy {
 
 internal class NativeRangesWritingStrategy(private val useNativeRangesAnnotation: Boolean) : RangesWritingStrategy() {
     override val indentation: String get() = ""
-    override val rangesAnnotation: String get() = if (useNativeRangesAnnotation) "@SharedImmutable\n" else ""
+    override val rangesAnnotation: String get() = if (useNativeRangesAnnotation) "@SharedImmutable\n@OptIn(FreezingIsDeprecated::class)\n" else ""
     override val rangesVisibilityModifier: String get() = "private"
     override fun beforeWritingRanges(writer: FileWriter) {}
     override fun afterWritingRanges(writer: FileWriter) {}

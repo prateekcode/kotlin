@@ -5,6 +5,8 @@
 
 package kotlin.native.concurrent
 
+import kotlin.native.FreezingIsDeprecated
+
 /**
  * Marks a top level property with a backing field or an object as thread local.
  * The object remains mutable and it is possible to change its state,
@@ -31,6 +33,7 @@ public expect annotation class ThreadLocal()
  */
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.BINARY)
+@FreezingIsDeprecated
 @OptionalExpectation
 public expect annotation class SharedImmutable()
 

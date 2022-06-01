@@ -7,6 +7,7 @@ package kotlin.collections
 
 import kotlin.native.concurrent.isFrozen
 
+@OptIn(FreezingIsDeprecated::class)
 actual class HashMap<K, V> private constructor(
         private var keysArray: Array<K>,
         private var valuesArray: Array<V>?, // allocated only when actually used, always null in pure HashSet

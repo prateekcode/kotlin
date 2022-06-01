@@ -30,4 +30,5 @@ public actual annotation class ThreadLocal
  */
 @Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.BINARY)
+@FreezingIsDeprecated
 public actual annotation class SharedImmutable

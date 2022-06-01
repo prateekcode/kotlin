@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 JetBrains s.r.o. and Kotlin Programming Language contributors.
+ * Copyright 2010-2022 JetBrains s.r.o. and Kotlin Programming Language contributors.
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
@@ -13,6 +13,7 @@ package test.text
 import kotlin.test.*
 
 @SharedImmutable
+@OptIn(FreezingIsDeprecated::class)
 private val casedRanges = arrayOf<IntRange>(
     0x0041..0x005a,
     0x0061..0x007a,

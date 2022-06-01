@@ -514,6 +514,7 @@ public actual fun CharSequence?.contentEquals(other: CharSequence?, ignoreCase: 
 }
 
 @SharedImmutable
+@OptIn(FreezingIsDeprecated::class)
 private val STRING_CASE_INSENSITIVE_ORDER = Comparator<String> { a, b -> a.compareTo(b, ignoreCase = true) }
 
 public actual val String.Companion.CASE_INSENSITIVE_ORDER: Comparator<String>

@@ -37,6 +37,7 @@ external public fun Char.isIdentifierIgnorable(): Boolean
 @GCUnsafeCall("Kotlin_Char_isISOControl")
 external public actual fun Char.isISOControl(): Boolean
 
+@OptIn(FreezingIsDeprecated::class)
 @SharedImmutable
 private val digits = intArrayOf(
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9,

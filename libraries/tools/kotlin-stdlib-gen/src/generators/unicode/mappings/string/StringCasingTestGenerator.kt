@@ -55,6 +55,7 @@ internal class StringCasingTestGenerator(private val outputDir: File) {
             writer.appendLine("import kotlin.test.*")
             writer.appendLine()
             writer.appendLine("@SharedImmutable")
+            writer.appendLine("@OptIn(FreezingIsDeprecated::class)")
             writer.appendLine("private val $rangesArrayName = arrayOf<IntRange>(")
             ranges.forEach {
                 writer.appendLine("    ${it.hexIntRangeLiteral()},")

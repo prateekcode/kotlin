@@ -48,6 +48,7 @@ internal class UnicodeCategoryScope(category: Int) : UnicodeCategory(category) {
  * This class represents character classes, i.e. sets of character either predefined or user defined.
  * Note: this class represent a token, not node, so being constructed by lexer.
  */
+@OptIn(FreezingIsDeprecated::class)
 internal abstract class AbstractCharClass : SpecialToken() {
     /**
      * Show if the class has alternative meaning:

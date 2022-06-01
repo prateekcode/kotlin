@@ -7,6 +7,7 @@ package kotlin
 
 import kotlin.coroutines.*
 import kotlin.coroutines.intrinsics.*
+import kotlin.native.FreezingIsDeprecated
 import kotlin.native.concurrent.SharedImmutable
 
 /**
@@ -125,6 +126,7 @@ public sealed class DeepRecursiveScope<T, R> {
 private typealias DeepRecursiveFunctionBlock = suspend DeepRecursiveScope<*, *>.(Any?) -> Any?
 
 @SharedImmutable
+@OptIn(FreezingIsDeprecated::class)
 private val UNDEFINED_RESULT = Result.success(COROUTINE_SUSPENDED)
 
 @Suppress("UNCHECKED_CAST")

@@ -21,6 +21,7 @@ object NativeTopLevelSingletonChecker : DeclarationChecker {
     override fun check(declaration: KtDeclaration, descriptor: DeclarationDescriptor, context: DeclarationCheckerContext) {
         // Check variables inside singletons.
         if (descriptor !is PropertyDescriptor) return
+        // TODO: Disable these checks? Or turn them from WARNING to INFO?
         (descriptor.containingDeclaration as? ClassDescriptor)?.let { parent ->
             val hasBackingFieldWithDefaultSetter = descriptor.hasBackingField(context.trace.bindingContext) &&
                     descriptor.setter?.isDefault == true

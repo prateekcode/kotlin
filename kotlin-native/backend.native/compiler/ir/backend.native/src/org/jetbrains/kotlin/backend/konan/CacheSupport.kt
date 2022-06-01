@@ -57,7 +57,7 @@ class CacheSupport(
 
         val ignoreReason = when {
             optimizationsEnabled -> "for optimized compilation"
-            memoryModel != MemoryModel.EXPERIMENTAL -> "with strict memory model"
+            memoryModel != MemoryModel.EXPERIMENTAL -> "with legacy MM"
             !propertyLazyInitialization -> "without lazy top levels initialization"
             configuration.get(BinaryOptions.stripDebugInfoFromNativeLibs) == false -> "with native libs debug info"
             else -> null
