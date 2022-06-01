@@ -60,7 +60,7 @@ class Your {
     val y = if (true) {
         val xx: Int
         exec {
-            <!CAPTURED_VAL_INITIALIZATION!>xx<!> = 42
+            <!CAPTURED_VAL_INITIALIZATION, CAPTURED_VAL_INITIALIZATION!>xx<!> = 42
         }
         24
     }

@@ -1,3 +1,5 @@
+// IGNORE_BACKEND_FIR: JVM_IR
+// FIR reports VAL_REASSIGNMENT even in unreachable code
 // IGNORE_BACKEND: JS
 //  java.lang.AssertionError
 //    at org.jetbrains.kotlin.js.translate.context.TranslationContext.getDispatchReceiver(TranslationContext.java:590)

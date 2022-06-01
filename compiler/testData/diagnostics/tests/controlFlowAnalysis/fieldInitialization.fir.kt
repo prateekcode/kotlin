@@ -138,15 +138,15 @@ class Test5 {
     val d: String
 
     val aInit = inlineMe {
-        a = "OK"
+        <!VAL_REASSIGNMENT!>a<!> = "OK"
     }
     val bInit = crossinlineMe {
-        b = "OK"
+        <!VAL_REASSIGNMENT!>b<!> = "OK"
     }
     val cInit = noinlineMe {
-        c = "OK"
+        <!VAL_REASSIGNMENT!>c<!> = "OK"
     }
     val dInit = notinline {
-        d = "OK"
+        <!VAL_REASSIGNMENT!>d<!> = "OK"
     }
 }

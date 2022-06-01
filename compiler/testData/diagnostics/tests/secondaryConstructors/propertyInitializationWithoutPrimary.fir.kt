@@ -23,7 +23,7 @@ class A {
 
     constructor(x: String): this() {
         y = 7
-        uninitialized = 8
+        <!VAL_REASSIGNMENT!>uninitialized<!> = 8
     }
 
     //anonymous

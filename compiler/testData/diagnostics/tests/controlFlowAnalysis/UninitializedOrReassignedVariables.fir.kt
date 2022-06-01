@@ -116,8 +116,8 @@ class AnonymousInitializers(var a: String, val b: String) {
         a = "30"
         a = "s"
 
-        b = "3"
-        b = "tt" //repeat for b
+        <!VAL_REASSIGNMENT!>b<!> = "3"
+        <!VAL_REASSIGNMENT!>b<!> = "tt" //repeat for b
     }
 
     val i: Int
@@ -127,14 +127,14 @@ class AnonymousInitializers(var a: String, val b: String) {
 
     init {
         x = 11
-        z = 10
+        <!VAL_REASSIGNMENT!>z<!> = 10
     }
 
     val j: Int
     get() = 20
 
     init {
-        i = 13
+        <!VAL_REASSIGNMENT!>i<!> = 13
         j = 34
     }
 
@@ -174,7 +174,7 @@ class AnonymousInitializers(var a: String, val b: String) {
     val n: Int
 
     init {
-        while (n == 0) {
+        while (<!UNINITIALIZED_VARIABLE!>n<!> == 0) {
         }
         n = 10
         while (n == 0) {
@@ -228,20 +228,20 @@ class Outer() {
 
     inner class Inner() {
         init {
-            a++
+            <!VAL_REASSIGNMENT!>a<!>++
             b++
         }
     }
 
     fun foo() {
-        a++
+        <!VAL_REASSIGNMENT!>a<!>++
         b++
     }
 }
 
-class ForwardAccessToBackingField() { //kt-147
-    val a = <!TYPECHECKER_HAS_RUN_INTO_RECURSIVE_PROBLEM!>a<!> // error
-    val b = c // error
+class ForwardAccessToBackingField() { // KT-147
+    val a = <!TYPECHECKER_HAS_RUN_INTO_RECURSIVE_PROBLEM, UNINITIALIZED_VARIABLE!>a<!> // error
+    val b = <!UNINITIALIZED_VARIABLE!>c<!> // error
     val c = 1
 }
 
@@ -271,8 +271,8 @@ fun foo() {
             z = 3
         }
         fun foo() {
-            y = 10
-            z = 13
+            <!VAL_REASSIGNMENT!>y<!> = 10
+            <!VAL_REASSIGNMENT!>z<!> = 13
         }
     }
 }
@@ -290,12 +290,12 @@ class TestObjectExpression() {
                     x = 1
             }
             fun inner1() {
-                y = 101
-                a = 231
+                <!VAL_REASSIGNMENT!>y<!> = 101
+                <!VAL_REASSIGNMENT!>a<!> = 231
             }
             fun inner2() {
-                y = 101
-                a = 231
+                <!VAL_REASSIGNMENT!>y<!> = 101
+                <!VAL_REASSIGNMENT!>a<!> = 231
             }
         }
     }
@@ -311,7 +311,7 @@ object TestObjectDeclaration {
     }
 
     fun foo() {
-        y = 10
+        <!VAL_REASSIGNMENT!>y<!> = 10
         val i: Int
         if (1 < 3) {
             i = 10
@@ -338,11 +338,24 @@ class M() {
 }
 
 fun test(m : M) {
-    m.x = 23
+    m.<!VAL_REASSIGNMENT!>x<!> = 23
     m.y = 23
 }
 
 fun test1(m : M) {
-    m.x++
+    m.<!VAL_REASSIGNMENT!>x<!>++
     m.y--
+}
+
+class TestPropertyInitAfterException(val param: Boolean) {
+    private val property: Int
+
+    init {
+        if (!param) {
+            throw Exception()
+        }
+        property = 42
+    }
+
+    private val ok = property
 }

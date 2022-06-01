@@ -12,12 +12,11 @@ import org.jetbrains.kotlin.fir.declarations.utils.referredPropertySymbol
 import org.jetbrains.kotlin.fir.expressions.FirVariableAssignment
 import org.jetbrains.kotlin.fir.resolve.dfa.cfg.*
 import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
-import org.jetbrains.kotlin.fir.symbols.impl.FirSyntheticPropertySymbol
 
-class LocalPropertyAndCapturedWriteCollector private constructor() : ControlFlowGraphVisitorVoid() {
+class PropertyAndCapturedWriteCollector private constructor(private val onlyLocal: Boolean) : ControlFlowGraphVisitorVoid() {
     companion object {
-        fun collect(graph: ControlFlowGraph): Pair<Set<FirPropertySymbol>, Set<FirVariableAssignment>> {
-            val collector = LocalPropertyAndCapturedWriteCollector()
+        fun collect(graph: ControlFlowGraph, onlyLocal: Boolean = false): Pair<Set<FirPropertySymbol>, Set<FirVariableAssignment>> {
+            val collector = PropertyAndCapturedWriteCollector(onlyLocal)
             graph.traverse(TraverseDirection.Forward, collector)
             return collector.symbols.keys to collector.capturedWrites
         }
@@ -33,8 +32,16 @@ class LocalPropertyAndCapturedWriteCollector private constructor() : ControlFlow
 
     override fun visitNode(node: CFGNode<*>) {}
 
+    override fun visitPropertyInitializerEnterNode(node: PropertyInitializerEnterNode) {
+        if (!onlyLocal) {
+            symbols[node.fir.symbol] = lambdaOrLocalFunctionStack.lastOrNull() == null
+        }
+    }
+
     override fun visitVariableDeclarationNode(node: VariableDeclarationNode) {
-        symbols[node.fir.symbol] = lambdaOrLocalFunctionStack.lastOrNull() == null
+        if (!onlyLocal || node.fir.isLocal) {
+            symbols[node.fir.symbol] = lambdaOrLocalFunctionStack.lastOrNull() == null
+        }
     }
 
     override fun visitPostponedLambdaEnterNode(node: PostponedLambdaEnterNode) {
@@ -55,8 +62,10 @@ class LocalPropertyAndCapturedWriteCollector private constructor() : ControlFlow
 
     override fun visitVariableAssignmentNode(node: VariableAssignmentNode) {
         val symbol = node.fir.referredPropertySymbol ?: return
-        if (symbol is FirSyntheticPropertySymbol) {
-            symbols[symbol] = true
+        if (!symbol.isLocal) {
+            if (!onlyLocal) {
+                symbols[symbol] = true
+            }
             return
         }
 

@@ -40,7 +40,7 @@ class case_3(value_1: Any?) {
     init {
         if (value_1 is String) {
             funWithUnknownCallsInPlace { value_2 = 0 }
-            value_2.div(10)
+            <!UNINITIALIZED_VARIABLE!>value_2<!>.div(10)
         } else if (value_1 == null) {
             funWithAtLeastOnceCallsInPlace { value_2 = 1 }
             value_2.div(10)
@@ -48,7 +48,7 @@ class case_3(value_1: Any?) {
             value_2 = 2
         }
 
-        value_2.div(10)
+        <!UNINITIALIZED_VARIABLE!>value_2<!>.div(10)
     }
 }
 

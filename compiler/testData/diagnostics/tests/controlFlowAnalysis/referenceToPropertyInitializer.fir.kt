@@ -28,5 +28,5 @@ class TestObjectLiteral {
 }
 
 class TestOther {
-    val x: Int = x + 1
+    val x: Int = <!UNINITIALIZED_VARIABLE!>x<!> + 1
 }

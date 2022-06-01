@@ -19,7 +19,7 @@ class Kaboom() {
     val another = <!UNINITIALIZED_VARIABLE!>simple<!>
 
     val something = <!DEBUG_INFO_LEAKING_THIS!>withGetter<!>
-    
+
     val delegated: String by CustomDelegate()
 
     val simple = "xyz"

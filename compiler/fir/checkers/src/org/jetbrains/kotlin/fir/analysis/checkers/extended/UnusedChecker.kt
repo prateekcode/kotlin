@@ -38,7 +38,7 @@ import org.jetbrains.kotlin.fir.types.coneType
 object UnusedChecker : FirControlFlowChecker() {
     override fun analyze(graph: ControlFlowGraph, reporter: DiagnosticReporter, context: CheckerContext) {
         if (graph.declaration?.getContainingClassSymbol(context.session)?.takeIf { !it.isLocal } != null) return
-        val (properties, _) = LocalPropertyAndCapturedWriteCollector.collect(graph)
+        val (properties, _) = PropertyAndCapturedWriteCollector.collect(graph, onlyLocal = true)
         if (properties.isEmpty()) return
 
         val data = ValueWritesWithoutReading(context.session, properties).getData(graph)

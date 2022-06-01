@@ -156,4 +156,15 @@ package uninitialized_reassigned_variables {
         public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
         public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
     }
+
+    public final class TestPropertyInitAfterException {
+        public constructor TestPropertyInitAfterException(/*0*/ param: kotlin.Boolean)
+        private final val ok: kotlin.Int
+        public final val param: kotlin.Boolean
+        private final val property: kotlin.Int
+        public open override /*1*/ /*fake_override*/ fun equals(/*0*/ other: kotlin.Any?): kotlin.Boolean
+        public open override /*1*/ /*fake_override*/ fun hashCode(): kotlin.Int
+        public open override /*1*/ /*fake_override*/ fun toString(): kotlin.String
+    }
 }
+

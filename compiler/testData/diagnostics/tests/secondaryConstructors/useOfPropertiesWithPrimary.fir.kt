@@ -1,9 +1,9 @@
 // !DIAGNOSTICS: -UNUSED_PARAMETER
 class A(val w: Int) {
     val x: Int
-    val useUnitialized = x +
-                         y +
-                         v
+    val useUnitialized = <!UNINITIALIZED_VARIABLE!>x<!> +
+                         <!UNINITIALIZED_VARIABLE!>y<!> +
+                         <!UNINITIALIZED_VARIABLE!>v<!>
     var y: Int
     val v = -1
     val useInitialized = useUnitialized + v + w
@@ -16,14 +16,14 @@ class A(val w: Int) {
 
     // anonymous
     init {
-        x + y + v + uninitialized + w
+        <!UNINITIALIZED_VARIABLE!>x<!> + <!UNINITIALIZED_VARIABLE!>y<!> + v + uninitialized + w
         x = 1
-        x + y + v + uninitialized + w
+        x + <!UNINITIALIZED_VARIABLE!>y<!> + v + uninitialized + w
     }
 
     // anonymous
     init {
-        x + y + v + uninitialized + w
+        x + <!UNINITIALIZED_VARIABLE!>y<!> + v + uninitialized + w
         y = 7
         x + y + v + uninitialized + w
     }
