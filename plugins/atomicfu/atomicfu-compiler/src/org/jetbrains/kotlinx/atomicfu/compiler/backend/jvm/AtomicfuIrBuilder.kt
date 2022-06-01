@@ -36,7 +36,7 @@ class AtomicfuIrBuilder internal constructor(
             putValueArgument(0, obj)
         }
 
-    fun atomicGetArrayElement(valueType: IrType, atomicArrayClass: IrClassSymbol, receiver: IrExpression, index: IrExpression) =
+    fun atomicGetArrayElement(atomicArrayClass: IrClassSymbol, receiver: IrExpression, index: IrExpression) =
         irCall(atomicSymbols.getAtomicHandlerFunctionSymbol(atomicArrayClass, "get")).apply {
             putValueArgument(0, index)
             dispatchReceiver = receiver
@@ -156,13 +156,13 @@ class AtomicfuIrBuilder internal constructor(
         }
     }
     */
-    fun atomicfuArrayLoopBody(valueType: IrType, atomicArrayClass: IrClassSymbol, valueParameters: List<IrValueParameter>) =
+    fun atomicfuArrayLoopBody(atomicArrayClass: IrClassSymbol, valueParameters: List<IrValueParameter>) =
         irBlockBody {
             +irWhile().apply {
                 condition = irTrue()
                 body = irBlock {
                     val cur = createTmpVariable(
-                        atomicGetArrayElement(valueType, atomicArrayClass, irGet(valueParameters[0]), irGet(valueParameters[1])),
+                        atomicGetArrayElement(atomicArrayClass, irGet(valueParameters[0]), irGet(valueParameters[1])),
                         "atomicfu\$cur", false
                     )
                     +irCall(atomicSymbols.invoke1Symbol).apply {
@@ -265,13 +265,13 @@ class AtomicfuIrBuilder internal constructor(
         }
     }
     */
-    fun atomicfuArrayUpdateBody(valueType: IrType, functionName: String, atomicArrayClass: IrClassSymbol, valueParameters: List<IrValueParameter>) =
+    fun atomicfuArrayUpdateBody(functionName: String, atomicArrayClass: IrClassSymbol, valueParameters: List<IrValueParameter>) =
         irBlockBody {
             +irWhile().apply {
                 condition = irTrue()
                 body = irBlock {
                     val cur = createTmpVariable(
-                        atomicGetArrayElement(valueType, atomicArrayClass, irGet(valueParameters[0]), irGet(valueParameters[1])),
+                        atomicGetArrayElement(atomicArrayClass, irGet(valueParameters[0]), irGet(valueParameters[1])),
                         "atomicfu\$cur", false
                     )
                     val upd = createTmpVariable(

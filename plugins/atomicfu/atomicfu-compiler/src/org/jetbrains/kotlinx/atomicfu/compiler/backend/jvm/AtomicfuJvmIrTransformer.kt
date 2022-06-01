@@ -546,7 +546,7 @@ class AtomicfuJvmIrTransformer(
                     val dispatchReceiver = getAtomicProperty.dispatchReceiver // parentFunction.dispatchReceiverParameter?.capture()
                         ?: run { // the field is static -> refVolatile wrapper
                             val refVolatileClassInstance = getStaticVolatileWrapperInstance(atomicProperty)
-                            getProperty(refVolatileClassInstance as IrProperty, null)
+                            getProperty(refVolatileClassInstance, null)
                         }
                     val atomicHandler = propertyToAtomicHandler[atomicProperty]
                         ?: error("No atomic handler found for the atomic property ${atomicProperty.render()}")
@@ -644,7 +644,7 @@ class AtomicfuJvmIrTransformer(
             addValueParameter(INDEX, irBuiltIns.intType)
             addValueParameter(ACTION, atomicSymbols.function1Type(valueType, irBuiltIns.unitType))
             body = atomicSymbols.createBuilder(symbol).run {
-                atomicfuArrayLoopBody(valueType, atomicfuArrayClass, valueParameters)
+                atomicfuArrayLoopBody(atomicfuArrayClass, valueParameters)
             }
             returnType = irBuiltIns.unitType
         }
@@ -664,14 +664,14 @@ class AtomicfuJvmIrTransformer(
             addValueParameter(INDEX, irBuiltIns.intType)
             addValueParameter(ACTION, atomicSymbols.function1Type(valueType, valueType))
             body = atomicSymbols.createBuilder(symbol).run {
-                atomicfuArrayUpdateBody(valueType, functionName, atomicfuArrayClass, valueParameters)
+                atomicfuArrayUpdateBody(functionName, atomicfuArrayClass, valueParameters)
             }
             returnType = if (functionName == UPDATE) irBuiltIns.unitType else valueType
         }
     }
 
     private fun getStaticVolatileWrapperInstance(atomicProperty: IrProperty): IrProperty {
-        val refVolatileStaticPropertyName = getVolatileWrapperClassName(atomicProperty).decapitalize()
+        val refVolatileStaticPropertyName = getVolatileWrapperClassName(atomicProperty).replaceFirstChar { it.lowercaseChar() }
         return atomicProperty.fileParent.declarations.singleOrNull {
             it is IrProperty && it.name.asString() == refVolatileStaticPropertyName
         } as? IrProperty
