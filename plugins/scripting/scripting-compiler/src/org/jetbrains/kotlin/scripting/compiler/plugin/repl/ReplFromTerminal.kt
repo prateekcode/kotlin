@@ -100,33 +100,46 @@ class ReplFromTerminal(
         }
     }
 
+    private fun tryInterpretResultValue(evalResult: ReplEvalResult.ValueResult): String? {
+        // since value classes are inlined, simple evalResult.value.toString() may provide "incorrect" results (see e.g. #KT-45065)
+        // so we're trying to restore original type by the type name stored in the evalResult.type
+        val resultClass = evalResult.value?.javaClass
+        val resultPrimitive = resultClass?.kotlin?.javaPrimitiveType
+        val resultClassTypeName = resultClass?.typeName ?: return null
+        val expectedType = evalResult.type?.substringBefore('<') ?: return null
+        if (expectedType == resultClassTypeName) return null
+        val expectedTypesPossiblyInner = generateSequence(expectedType) {
+            val lastDot = it.lastIndexOf('.')
+            if (lastDot > 0) buildString {
+                append(it.substring(0, lastDot))
+                append('$')
+                append(it.substring(lastDot + 1))
+            } else null
+        }
+        val classLoader = evalResult.snippetInstance?.javaClass?.classLoader
+            ?: resultClass.classLoader
+            ?: ReplFromTerminal::class.java.classLoader
+        val expectedClass = expectedTypesPossiblyInner.firstNotNullOfOrNull { classLoader.tryLoadClass(it) } ?: return null
+        val ctor = expectedClass.declaredConstructors.find { ctor ->
+            ctor.parameterCount == 1
+                    && ctor.parameters[0].type.let { it == resultClass || it == resultPrimitive || it == Any::class.java }
+        } ?: return null
+        return try {
+            ctor.isAccessible = true
+            val valueString = ctor.newInstance(evalResult.value).toString()
+            "${evalResult.name}: ${evalResult.type} = $valueString"
+        } catch (e: Throwable) {
+            null
+        }
+    }
+
     private fun eval(line: String): ReplEvalResult {
         val evalResult = replInterpreter.eval(line)
         when (evalResult) {
             is ReplEvalResult.ValueResult, is ReplEvalResult.UnitResult -> {
                 writer.notifyCommandSuccess()
                 if (evalResult is ReplEvalResult.ValueResult) {
-                    val resultClass = evalResult.value?.javaClass
-                    val resultPrimitive = evalResult.value?.javaClass?.kotlin?.javaPrimitiveType
-                    val resultClassTypeName = resultClass?.typeName
-                    val resultString = evalResult.type.takeIf {
-                        it != null && resultClassTypeName != null && it != resultClassTypeName
-                    }?.let {
-                        ReplFromTerminal::class.java.classLoader.tryLoadClass(it)
-                    }?.let {
-                        it.declaredConstructors.find { ctor ->
-                            ctor.parameterCount == 1
-                                    && (ctor.parameters[0].type == resultClass || ctor.parameters[0].type == resultPrimitive)
-                        }
-                    }?.let {
-                        try {
-                            it.isAccessible = true
-                            it.newInstance(evalResult.value).toString()
-                        } catch (e: Throwable) {
-                            null
-                        }
-                    }
-                    writer.outputCommandResult(resultString ?: evalResult.toString())
+                    writer.outputCommandResult(tryInterpretResultValue(evalResult) ?: evalResult.toString())
                 }
             }
             is ReplEvalResult.Error.Runtime -> writer.outputRuntimeError(evalResult.message)
