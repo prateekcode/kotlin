@@ -34,10 +34,12 @@ import org.jetbrains.kotlin.parcelize.test.runners.*
 import org.jetbrains.kotlin.samWithReceiver.AbstractSamWithReceiverScriptTest
 import org.jetbrains.kotlin.samWithReceiver.AbstractSamWithReceiverTest
 import org.jetbrains.kotlin.test.TargetBackend
+import org.jetbrains.kotlinx.atomicfu.AbstractAtomicfuIrBytecodeListingTest
 import org.jetbrains.kotlinx.serialization.AbstractSerializationIrBytecodeListingTest
 import org.jetbrains.kotlinx.serialization.AbstractSerializationPluginBytecodeListingTest
 import org.jetbrains.kotlinx.serialization.AbstractSerializationPluginDiagnosticTest
 import org.jetbrains.kotlinx.atomicfu.AbstractAtomicfuJsIrTest
+import org.jetbrains.kotlinx.atomicfu.AbstractAtomicfuJvmIrTest
 
 fun main(args: Array<String>) {
     System.setProperty("java.awt.headless", "true")
@@ -270,6 +272,16 @@ fun main(args: Array<String>) {
             }
         }
 
+        testGroup(
+            "plugins/atomicfu/atomicfu-compiler/test",
+            "plugins/atomicfu/atomicfu-compiler/testData",
+            testRunnerMethodName = "runTest0"
+        ) {
+            testClass<AbstractAtomicfuIrBytecodeListingTest> {
+                model("codegen/")
+            }
+        }
+
         testGroup("plugins/lombok/lombok-compiler-plugin/tests", "plugins/lombok/lombok-compiler-plugin/testData") {
             testClass<AbstractLombokCompileTest> {
                 model("compile")
@@ -406,6 +418,16 @@ fun main(args: Array<String>) {
             testRunnerMethodName = "runTest0"
         ) {
             testClass<AbstractAtomicfuJsIrTest> {
+                model("box/")
+            }
+        }
+
+        testGroup(
+            "plugins/atomicfu/atomicfu-compiler/test",
+            "plugins/atomicfu/atomicfu-compiler/testData",
+            testRunnerMethodName = "runTest0"
+        ) {
+            testClass<AbstractAtomicfuJvmIrTest> {
                 model("box/")
             }
         }
