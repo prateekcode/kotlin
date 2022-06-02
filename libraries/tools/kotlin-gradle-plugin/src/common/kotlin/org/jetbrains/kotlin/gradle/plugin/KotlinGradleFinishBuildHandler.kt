@@ -10,6 +10,7 @@ import org.gradle.api.logging.Logging
 import org.jetbrains.kotlin.compilerRunner.DELETED_SESSION_FILE_PREFIX
 import org.jetbrains.kotlin.compilerRunner.GradleCompilerRunner
 import org.jetbrains.kotlin.gradle.logging.kotlinDebug
+import org.jetbrains.kotlin.gradle.plugin.internal.state.TaskBuildMetrics
 import org.jetbrains.kotlin.gradle.plugin.internal.state.TaskExecutionResults
 import org.jetbrains.kotlin.gradle.plugin.internal.state.TaskLoggers
 import org.jetbrains.kotlin.gradle.utils.relativeOrCanonical
@@ -36,6 +37,7 @@ internal class KotlinGradleFinishBuildHandler {
     fun buildFinished(rootProjectBuildDir: File, rootProjectRootDir: File) {
         TaskLoggers.clear()
         TaskExecutionResults.clear()
+        TaskBuildMetrics.clear()
 
         GradleCompilerRunner.clearBuildModulesInfo()
 

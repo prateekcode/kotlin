@@ -12,6 +12,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import org.jetbrains.kotlin.gradle.logging.kotlinDebug
+import org.jetbrains.kotlin.gradle.plugin.internal.state.TaskBuildMetrics
 import org.jetbrains.kotlin.gradle.plugin.internal.state.TaskExecutionResults
 import org.jetbrains.kotlin.gradle.plugin.internal.state.TaskLoggers
 import org.jetbrains.kotlin.gradle.plugin.statistics.BuildScanStatisticsListener
@@ -44,6 +45,7 @@ internal abstract class KotlinGradleBuildServices : BuildService<KotlinGradleBui
 
         TaskLoggers.clear()
         TaskExecutionResults.clear()
+        TaskBuildMetrics.clear()
     }
 
     companion object {
