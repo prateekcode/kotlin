@@ -100,11 +100,10 @@ class ReplFromTerminal(
         }
     }
 
-    private fun tryInterpretResultValue(evalResult: ReplEvalResult.ValueResult): String? {
+    private fun tryInterpretResultAsValueClass(evalResult: ReplEvalResult.ValueResult): String? {
         // since value classes are inlined, simple evalResult.value.toString() may provide "incorrect" results (see e.g. #KT-45065)
         // so we're trying to restore original type by the type name stored in the evalResult.type
         val resultClass = evalResult.value?.javaClass
-        val resultPrimitive = resultClass?.kotlin?.javaPrimitiveType
         val resultClassTypeName = resultClass?.typeName ?: return null
         val expectedType = evalResult.type?.substringBefore('<') ?: return null
         if (expectedType == resultClassTypeName) return null
@@ -120,13 +119,11 @@ class ReplFromTerminal(
             ?: resultClass.classLoader
             ?: ReplFromTerminal::class.java.classLoader
         val expectedClass = expectedTypesPossiblyInner.firstNotNullOfOrNull { classLoader.tryLoadClass(it) } ?: return null
-        val ctor = expectedClass.declaredConstructors.find { ctor ->
-            ctor.parameterCount == 1
-                    && ctor.parameters[0].type.let { it == resultClass || it == resultPrimitive || it == Any::class.java }
+        val boxMethod = expectedClass.declaredMethods.find { ctor ->
+            ctor.name == "box-impl"
         } ?: return null
         return try {
-            ctor.isAccessible = true
-            val valueString = ctor.newInstance(evalResult.value).toString()
+            val valueString = boxMethod.invoke(null, evalResult.value).toString()
             "${evalResult.name}: ${evalResult.type} = $valueString"
         } catch (e: Throwable) {
             null
@@ -139,7 +136,7 @@ class ReplFromTerminal(
             is ReplEvalResult.ValueResult, is ReplEvalResult.UnitResult -> {
                 writer.notifyCommandSuccess()
                 if (evalResult is ReplEvalResult.ValueResult) {
-                    writer.outputCommandResult(tryInterpretResultValue(evalResult) ?: evalResult.toString())
+                    writer.outputCommandResult(tryInterpretResultAsValueClass(evalResult) ?: evalResult.toString())
                 }
             }
             is ReplEvalResult.Error.Runtime -> writer.outputRuntimeError(evalResult.message)
