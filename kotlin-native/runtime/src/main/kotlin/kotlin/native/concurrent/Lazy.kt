@@ -68,7 +68,7 @@ internal class FreezeAwareLazyImpl<out T>(initializer: () -> T) : Lazy<T> {
         value.toString() else "Lazy value not initialized yet"
 }
 
-OptIn(FreezingIsDeprecated::class)
+@OptIn(FreezingIsDeprecated::class)
 internal object UNINITIALIZED {
     // So that single-threaded configs can use those as well.
     init {
@@ -76,7 +76,7 @@ internal object UNINITIALIZED {
     }
 }
 
-OptIn(FreezingIsDeprecated::class)
+@OptIn(FreezingIsDeprecated::class)
 internal object INITIALIZING {
     // So that single-threaded configs can use those as well.
     init {

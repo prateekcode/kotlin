@@ -30,7 +30,7 @@ external public fun deinitRuntimeIfNeeded(): Unit
  */
 // Not @FreezingIsDeprecated: useless for the new MM, but not directly about freezing.
 // TODO: deprecate with another annotation?
-public class IncorrectDereferenceException : RuntimeException {y
+public class IncorrectDereferenceException : RuntimeException {
     constructor() : super()
 
     constructor(message: String) : super(message)
