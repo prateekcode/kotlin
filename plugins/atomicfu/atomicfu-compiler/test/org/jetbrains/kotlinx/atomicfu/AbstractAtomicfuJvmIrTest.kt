@@ -36,25 +36,6 @@ open class AbstractAtomicfuJvmIrTest : AbstractIrBlackBoxCodegenTest() {
     }
 }
 
-@OptIn(ObsoleteTestInfrastructure::class)
-abstract class AbstractAtomicfuIrBytecodeListingTest : AbstractAsmLikeInstructionListingTest() {
-
-    override fun getExpectedTextFileName(wholeFile: File): String {
-        return wholeFile.nameWithoutExtension + ".ir.txt"
-    }
-
-    override val backend = TargetBackend.JVM_IR
-
-    override fun setupEnvironment(environment: KotlinCoreEnvironment) {
-        AtomicfuComponentRegistrar.registerExtensions(environment.project)
-        environment.updateClasspath(listOf(
-            JvmClasspathRoot(coreLibraryPath!!),
-            JvmClasspathRoot(kotlinTestPath!!),
-            JvmClasspathRoot(javaUtilConcurrentPath!!)
-        ))
-    }
-}
-
 private fun getLibraryJar(classToDetect: String): File? = try {
     PathUtil.getResourcePathForClass(Class.forName(classToDetect))
 } catch (e: ClassNotFoundException) {
@@ -72,7 +53,7 @@ private fun TestConfigurationBuilder.configureForKotlinxAtomicfu(librariesPaths:
                     configuration.addJvmClasspathRoots(librariesPaths)
                 }
 
-                override fun registerCompilerExtensions(project: Project, module: TestModule) {
+                override fun registerCompilerExtensions(project: Project, module: TestModule, configuration: CompilerConfiguration) {
                     AtomicfuComponentRegistrar.registerExtensions(project)
                 }
             }

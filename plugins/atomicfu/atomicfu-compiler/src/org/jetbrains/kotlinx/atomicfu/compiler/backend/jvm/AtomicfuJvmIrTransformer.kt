@@ -100,6 +100,7 @@ class AtomicfuJvmIrTransformer(
                 it.patchDeclarationParents(it.parent)
             }
         }
+        // todo check that no AFU is left
     }
 
     private val propertyToAtomicHandler = mutableMapOf<IrProperty, IrProperty>()
@@ -116,6 +117,7 @@ class AtomicfuJvmIrTransformer(
             declaration.declarations.filter(::isAtomicArray).forEach { atomicArrayProperty ->
                 (atomicArrayProperty as IrProperty).transformAtomicArrayProperty(declaration)
             }
+            declaration.declarations.removeIf(::isTrace)
             return super.visitClass(declaration, data)
         }
 
@@ -144,18 +146,19 @@ class AtomicfuJvmIrTransformer(
                     atomicProperty.parent = volatileWrapperClass
                 }
             }
+            declaration.declarations.removeIf(::isTrace)
             return super.visitFile(declaration, data)
         }
 
         private fun IrProperty.transformAtomicProperty(parentClass: IrClass) {
             backingField = buildVolatileRawField(this, parentClass)
-            addDefaultGetter(parentClass, irBuiltIns)
+            context.addDefaultGetter(this, parentClass)
             registerAtomicHandler(addAtomicFUProperty(this, parentClass))
         }
 
         private fun IrProperty.transformAtomicArrayProperty(parentClass: IrClass) {
             backingField = buildJucaArrayField(this, parentClass)
-            addDefaultGetter(parentClass, irBuiltIns)
+            context.addDefaultGetter(this, parentClass)
             registerAtomicHandler(this)
         }
 
@@ -285,12 +288,12 @@ class AtomicfuJvmIrTransformer(
             return volatileWrapperClass as IrClass
         }
 
-        private fun getPropertyInitializer(atomicField: IrField, parentClass: IrClass): IrExpression? {
-            atomicField.initializer?.expression?.let { return it }
+        private fun getPropertyInitializer(field: IrField, parentClass: IrClass): IrExpression? {
+            field.initializer?.expression?.let { return it }
             parentClass.declarations.forEach { declaration ->
                 if (declaration is IrAnonymousInitializer) {
                     declaration.body.statements.singleOrNull {
-                        it is IrSetField && it.symbol == atomicField.symbol
+                        it is IrSetField && it.symbol == field.symbol
                     }?.let {
                         declaration.body.statements.remove(it) //todo is it ok&
                         return (it as IrSetField).value
@@ -315,6 +318,14 @@ class AtomicfuJvmIrTransformer(
             if (property !is IrProperty) return false
             property.backingField?.let {
                 return it.type.isAtomicArrayType()
+            }
+            return false
+        }
+
+        private fun isTrace(property: IrDeclaration): Boolean {
+            if (property !is IrProperty) return false
+            property.backingField?.let {
+                return it.type.isTraceBaseType()
             }
             return false
         }
@@ -532,6 +543,27 @@ class AtomicfuJvmIrTransformer(
             return super.visitGetValue(expression, data)
         }
 
+        override fun visitBlockBody(body: IrBlockBody, data: IrFunction?): IrBody {
+            // Erase messages added by the Trace object from the function body:
+            // val trace = Trace(size)
+            // Messages may be added via trace invocation:
+            // trace { "Doing something" }
+            // or via multi-append of arguments:
+            // trace.append(index, "CAS", value)
+            body.statements.removeIf {
+                it.isTraceCall()
+            }
+            return super.visitBlockBody(body, data)
+        }
+
+        override fun visitContainerExpression(expression: IrContainerExpression, data: IrFunction?): IrExpression {
+            // Erase messages added by the Trace object from blocks.
+            expression.statements.removeIf {
+                it.isTraceCall()
+            }
+            return super.visitContainerExpression(expression, data)
+        }
+
         private fun AtomicfuIrBuilder.getAtomicFieldInfo(
             receiver: IrExpression,
             parentFunction: IrFunction?
@@ -688,6 +720,11 @@ class AtomicfuJvmIrTransformer(
             it.parent().asString() == AFU_PKG && it.shortName().asString() in ATOMIC_ARRAY_TYPES
         } ?: false
 
+    private fun IrType.isTraceBaseType() =
+        classFqName?.let {
+            it.parent().asString() == AFU_PKG && it.shortName().asString() == TRACE_BASE_TYPE
+        } ?: false
+
     private fun IrCall.isArrayElementGetter(): Boolean =
         dispatchReceiver?.let {
             it.type.isAtomicArrayType() && symbol.owner.name.asString() == "get"
@@ -698,18 +735,6 @@ class AtomicfuJvmIrTransformer(
             AFU_VALUE_TYPES[it.shortName().asString()]
         } ?: error("No corresponding value type was found for this atomic type: ${this.render()}")
 
-    private fun IrType.isReentrantLockType() = belongsTo(AFU_LOCKS_PKG, REENTRANT_LOCK_TYPE)
-    private fun IrType.isTraceBaseType() = belongsTo(AFU_PKG, TRACE_BASE_TYPE)
-
-    private fun IrType.belongsTo(packageName: String, typeNames: Set<String>) =
-        getSignature()?.let { sig ->
-            sig.packageFqName == packageName && sig.declarationFqName in typeNames
-        } ?: false
-
-    private fun IrType.belongsTo(packageName: String, typeName: String) =
-        getSignature()?.let { sig ->
-            sig.packageFqName == packageName && sig.declarationFqName == typeName
-        } ?: false
 
     private fun IrType.getSignature(): IdSignature.CommonSignature? = classOrNull?.let { it.signature?.asPublic() }
 
@@ -722,21 +747,16 @@ class AtomicfuJvmIrTransformer(
         symbol.isKotlinxAtomicfuPackage() && symbol.owner.name.asString() == ATOMIC_VALUE_FACTORY &&
                 type.isAtomicValueType()
 
-    private fun IrCall.isTraceFactory(): Boolean =
-        symbol.isKotlinxAtomicfuPackage() && symbol.owner.name.asString() == TRACE &&
-                type.isTraceBaseType()
-
     private fun IrFunction.isAtomicExtension(): Boolean =
         extensionReceiverParameter?.let { it.type.isAtomicValueType() && this.isInline } ?: false
 
     private fun IrCall.isAtomicFieldGetter(): Boolean =
         type.isAtomicValueType() && symbol.owner.name.asString().startsWith("<get-")
 
-    private fun IrCall.isReentrantLockFactory(): Boolean =
-        symbol.owner.name.asString() == REENTRANT_LOCK_FACTORY && type.isReentrantLockType()
-
     private fun IrCall.isGetValue() = symbol.isKotlinxAtomicfuPackage() && symbol.owner.name.asString() == GET_VALUE
     private fun IrCall.isSetValue() = symbol.isKotlinxAtomicfuPackage() && symbol.owner.name.asString() == SET_VALUE
+
+    private fun IrStatement.isTraceCall() = this is IrCall && (isTraceInvoke() || isTraceAppend())
 
     private fun IrCall.isTraceInvoke(): Boolean =
         symbol.isKotlinxAtomicfuPackage() &&

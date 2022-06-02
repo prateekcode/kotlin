@@ -96,7 +96,7 @@ public class AtomicfuJvmIrTestGenerated extends AbstractAtomicfuJvmIrTest {
         runTest("plugins/atomicfu/atomicfu-compiler/testData/box/LockFreeQueueTest.kt");
     }
 
-    //@Test
+    @Test
     @TestMetadata("LockFreeStackTest.kt")
     public void testLockFreeStackTest() throws Exception {
         runTest("plugins/atomicfu/atomicfu-compiler/testData/box/LockFreeStackTest.kt");
@@ -132,7 +132,7 @@ public class AtomicfuJvmIrTestGenerated extends AbstractAtomicfuJvmIrTest {
         runTest("plugins/atomicfu/atomicfu-compiler/testData/box/PropertyDeclarationTest.kt");
     }
 
-    //@Test
+    @Test
     @TestMetadata("ReentrantLockTest.kt")
     public void testReentrantLockTest() throws Exception {
         runTest("plugins/atomicfu/atomicfu-compiler/testData/box/ReentrantLockTest.kt");
@@ -150,7 +150,7 @@ public class AtomicfuJvmIrTestGenerated extends AbstractAtomicfuJvmIrTest {
         runTest("plugins/atomicfu/atomicfu-compiler/testData/box/SimpleLockTest.kt");
     }
 
-    //@Test
+    @Test
     @TestMetadata("SynchronizedObjectTest.kt")
     public void testSynchronizedObjectTest() throws Exception {
         runTest("plugins/atomicfu/atomicfu-compiler/testData/box/SynchronizedObjectTest.kt");
@@ -162,7 +162,7 @@ public class AtomicfuJvmIrTestGenerated extends AbstractAtomicfuJvmIrTest {
         runTest("plugins/atomicfu/atomicfu-compiler/testData/box/TopLevelTest.kt");
     }
 
-    //@Test
+    @Test
     @TestMetadata("TraceTest.kt")
     public void testTraceTest() throws Exception {
         runTest("plugins/atomicfu/atomicfu-compiler/testData/box/TraceTest.kt");

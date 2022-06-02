@@ -7,24 +7,27 @@ package org.jetbrains.kotlinx.atomicfu.compiler.backend
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
+import org.jetbrains.kotlin.ir.IrBuiltIns
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.backend.js.ir.JsIrBuilder.buildValueParameter
 import org.jetbrains.kotlin.ir.builders.declarations.*
+import org.jetbrains.kotlin.ir.builders.irExprBody
+import org.jetbrains.kotlin.ir.builders.irGetField
+import org.jetbrains.kotlin.ir.builders.irReturn
+import org.jetbrains.kotlin.ir.builders.irSetField
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.expressions.impl.*
 import org.jetbrains.kotlin.ir.symbols.*
 import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.types.impl.*
-import org.jetbrains.kotlin.ir.util.IdSignature
-import org.jetbrains.kotlin.ir.util.defaultType
-import org.jetbrains.kotlin.ir.util.primaryConstructor
-import org.jetbrains.kotlin.ir.util.render
+import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.util.capitalizeDecapitalize.decapitalizeAsciiOnly
+import org.jetbrains.kotlinx.atomicfu.compiler.backend.jvm.AtomicSymbols
 
 private const val KOTLIN = "kotlin"
 private const val GET = "get"
@@ -312,7 +315,7 @@ internal fun IrPluginContext.addProperty(field: IrField, parent: IrDeclarationCo
         backingField = field
         this.parent = parent
         if (!isStatic) {
-            addDefaultGetter(field.parent as IrClass, irBuiltIns)
+            addDefaultGetter(this, field.parent as IrClass)
         } else {
             addGetter {
                 origin = IrDeclarationOrigin.DEFAULT_PROPERTY_ACCESSOR
@@ -338,6 +341,35 @@ internal fun IrPluginContext.addProperty(field: IrField, parent: IrDeclarationCo
         }
         parent.declarations.add(this)
     }
+
+internal fun IrPluginContext.addDefaultGetter(property: IrProperty, parentClass: IrClass) {
+    val field = property.backingField!!
+    property.addGetter {
+        origin = IrDeclarationOrigin.DEFAULT_PROPERTY_ACCESSOR
+        returnType = field.type
+    }.apply {
+        dispatchReceiverParameter = parentClass.thisReceiver!!.deepCopyWithSymbols(this)
+        body = factory.createBlockBody(
+            UNDEFINED_OFFSET, UNDEFINED_OFFSET, listOf(
+                IrReturnImpl(
+                    UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                    irBuiltIns.nothingType,
+                    symbol,
+                    IrGetFieldImpl(
+                        UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                        field.symbol,
+                        field.type,
+                        IrGetValueImpl(
+                            UNDEFINED_OFFSET, UNDEFINED_OFFSET,
+                            dispatchReceiverParameter!!.type,
+                            dispatchReceiverParameter!!.symbol
+                        )
+                    )
+                )
+            )
+        )
+    }
+}
 
 internal fun IrPluginContext.buildClassInstance(irClass: IrClass, parentClass: IrFile) =
     irFactory.buildField {
