@@ -727,6 +727,7 @@ static void buildITable(TypeInfo* result, const std_support::map<ClassId, std_su
 }
 
 static const TypeInfo* createTypeInfo(
+  Class clazz,
   const TypeInfo* superType,
   const std_support::vector<const TypeInfo*>& superInterfaces,
   const std_support::vector<VTableElement>& vtable,
@@ -784,8 +785,8 @@ static const TypeInfo* createTypeInfo(
     }
   }
 
-  result->packageName_ = nullptr;
-  result->relativeName_ = nullptr; // TODO: add some info.
+  result->packageName_ = nullptr;  // "platform.Foundation"; // FIXME convert "const char *" to "ObjHeader*"
+  result->relativeName_ = nullptr; // class_getName(clazz);   // FIXME convert "const char *" to "ObjHeader*"
   result->writableInfo_ = (WritableTypeInfo*)std_support::calloc(1, sizeof(WritableTypeInfo));
 
   for (size_t i = 0; i < vtable.size(); ++i) result->vtable()[i] = vtable[i];
@@ -994,7 +995,7 @@ static const TypeInfo* createTypeInfo(Class clazz, const TypeInfo* superType, co
 
   // TODO: consider forbidding the class being abstract.
 
-  const TypeInfo* result = createTypeInfo(superType, addedInterfaces, vtable, interfaceVTables,
+  const TypeInfo* result = createTypeInfo(clazz, superType, addedInterfaces, vtable, interfaceVTables,
                                           superITable, superITableSize, itableEqualsSuper, fieldsInfo);
 
   // TODO: it will probably never be requested, since such a class can't be instantiated in Kotlin.
