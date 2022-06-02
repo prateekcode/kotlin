@@ -37,7 +37,12 @@ class ScriptCompilationConfigurationFromDefinition(
         @Suppress("DEPRECATION")
         compilerOptions.putIfAny(scriptDefinition.additionalCompilerArguments)
         ide {
-            acceptedLocations.put(scriptDefinition.scriptExpectedLocations.mapLegacyExpectedLocations())
+            val acceptedLocs = scriptDefinition.scriptExpectedLocations.mapLegacyExpectedLocations()
+            if (scriptDefinition.fileExtension == ".gradle.kts") {
+                acceptedLocations.put(acceptedLocs + listOf(ScriptAcceptedLocation.Sources, ScriptAcceptedLocation.Tests))
+            } else {
+                acceptedLocations.put(acceptedLocs)
+            }
         }
         if (scriptDefinition.dependencyResolver != DependenciesResolver.NoDependencies) {
             refineConfiguration {
