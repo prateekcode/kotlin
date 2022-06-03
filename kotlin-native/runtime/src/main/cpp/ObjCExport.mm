@@ -50,6 +50,7 @@
 #include "std_support/String.hpp"
 #include "std_support/UnorderedSet.hpp"
 #include "std_support/Vector.hpp"
+#include "utf8.h"
 
 using namespace kotlin;
 
@@ -728,7 +729,7 @@ static void buildITable(TypeInfo* result, const std_support::map<ClassId, std_su
   }
 }
 
-static ObjHeader* mallocStringFrom(const char* cstr) {
+static ObjHeader* mallocString(const char* cstr) {
   size_t count = strlen(cstr);
   size_t headerSize = alignUp(sizeof(ArrayHeader), alignof(char16_t));
   size_t arraySize = headerSize + count * sizeof(char16_t);
@@ -736,10 +737,7 @@ static ObjHeader* mallocStringFrom(const char* cstr) {
   ArrayHeader* header = (ArrayHeader*)malloc(arraySize);
   header->typeInfoOrMeta_ = (TypeInfo *)theStringTypeInfo;
   header->count_ = count;
-  char16_t* chars16 = (char16_t*)((char*)header + headerSize);
-  for (uint32_t index = 0; index < count; ++index) {
-    *chars16++ = *cstr++;
-  }
+  utf8::utf8to16(cstr, cstr + count, (char16_t*)((char*)header + headerSize));
   return header->obj();
 }
 
@@ -802,8 +800,8 @@ static const TypeInfo* createTypeInfo(
     }
   }
 
-  result->packageName_ = mallocStringFrom(""); // Obj-C classes have no package name. Empty string must be set then.
-  result->relativeName_ = mallocStringFrom(className);
+  result->packageName_ = mallocString(""); // Obj-C has no packages. Hence, empty string must be set here for KClassImpl.toString()
+  result->relativeName_ = mallocString(className);
   result->writableInfo_ = (WritableTypeInfo*)std_support::calloc(1, sizeof(WritableTypeInfo));
 
   for (size_t i = 0; i < vtable.size(); ++i) result->vtable()[i] = vtable[i];
