@@ -788,11 +788,13 @@ static const TypeInfo* createTypeInfo(
 
   ObjHolder packageNameHolder;
   CreateStringFromCString("FIXME", packageNameHolder.slot());
-  result->packageName_ = (ObjHeader*)CreateStablePointer(packageNameHolder.obj());
+  CreateStablePointer(packageNameHolder.obj());
+  result->packageName_ = packageNameHolder.obj();
 
   ObjHolder relNameHolder;
   CreateStringFromCString(class_getName(clazz), relNameHolder.slot());
-  result->relativeName_ = (ObjHeader*)CreateStablePointer(relNameHolder.obj());
+  CreateStablePointer(relNameHolder.obj());
+  result->relativeName_ = relNameHolder.obj();
 
   result->writableInfo_ = (WritableTypeInfo*)std_support::calloc(1, sizeof(WritableTypeInfo));
 
