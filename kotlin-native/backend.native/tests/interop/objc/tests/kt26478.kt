@@ -8,5 +8,5 @@ fun testKT26478() {
     val exception = assertFailsWith<ClassCastException> {
         NSBundle() as KT26478
     }
-    assertEquals("class FIXME.NSBundle cannot be cast to class KT26478", exception.message)
+    assertEquals("class NSBundle cannot be cast to class KT26478", exception.message)
 }

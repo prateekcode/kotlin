@@ -727,6 +727,13 @@ static void buildITable(TypeInfo* result, const std_support::map<ClassId, std_su
   }
 }
 
+static ObjHeader* toObjHeaderPtr(const char * str) {
+  ObjHolder holder;
+  CreateStringFromCString(str, holder.slot());  // Obj-C classes have no package name. Empty string must be set then.
+  CreateStablePointer(holder.obj());
+  return holder.obj();
+}
+
 static const TypeInfo* createTypeInfo(
   Class clazz,
   const TypeInfo* superType,
@@ -786,16 +793,8 @@ static const TypeInfo* createTypeInfo(
     }
   }
 
-  ObjHolder packageNameHolder;
-  CreateStringFromCString("FIXME", packageNameHolder.slot());
-  CreateStablePointer(packageNameHolder.obj());
-  result->packageName_ = packageNameHolder.obj();
-
-  ObjHolder relNameHolder;
-  CreateStringFromCString(class_getName(clazz), relNameHolder.slot());
-  CreateStablePointer(relNameHolder.obj());
-  result->relativeName_ = relNameHolder.obj();
-
+  result->packageName_ = toObjHeaderPtr(""); // Obj-C classes have no package name. Empty string must be set then.
+  result->relativeName_ = toObjHeaderPtr(class_getName(clazz));
   result->writableInfo_ = (WritableTypeInfo*)std_support::calloc(1, sizeof(WritableTypeInfo));
 
   for (size_t i = 0; i < vtable.size(); ++i) result->vtable()[i] = vtable[i];
