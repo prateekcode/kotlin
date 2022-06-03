@@ -727,15 +727,15 @@ static void buildITable(TypeInfo* result, const std_support::map<ClassId, std_su
   }
 }
 
-static ObjHeader* toObjHeaderPtr(const char * str) {
+static ObjHeader* createStableStringFromCString(const char* str) {
   ObjHolder holder;
-  CreateStringFromCString(str, holder.slot());  // Obj-C classes have no package name. Empty string must be set then.
+  CreateStringFromCString(str, holder.slot());
   CreateStablePointer(holder.obj());
   return holder.obj();
 }
 
 static const TypeInfo* createTypeInfo(
-  Class clazz,
+  const char* className,
   const TypeInfo* superType,
   const std_support::vector<const TypeInfo*>& superInterfaces,
   const std_support::vector<VTableElement>& vtable,
@@ -793,8 +793,8 @@ static const TypeInfo* createTypeInfo(
     }
   }
 
-  result->packageName_ = toObjHeaderPtr(""); // Obj-C classes have no package name. Empty string must be set then.
-  result->relativeName_ = toObjHeaderPtr(class_getName(clazz));
+  result->packageName_ = createStableStringFromCString(""); // Obj-C classes have no package name. Empty string must be set then.
+  result->relativeName_ = createStableStringFromCString(className);
   result->writableInfo_ = (WritableTypeInfo*)std_support::calloc(1, sizeof(WritableTypeInfo));
 
   for (size_t i = 0; i < vtable.size(); ++i) result->vtable()[i] = vtable[i];
@@ -1003,7 +1003,7 @@ static const TypeInfo* createTypeInfo(Class clazz, const TypeInfo* superType, co
 
   // TODO: consider forbidding the class being abstract.
 
-  const TypeInfo* result = createTypeInfo(clazz, superType, addedInterfaces, vtable, interfaceVTables,
+  const TypeInfo* result = createTypeInfo(class_getName(clazz), superType, addedInterfaces, vtable, interfaceVTables,
                                           superITable, superITableSize, itableEqualsSuper, fieldsInfo);
 
   // TODO: it will probably never be requested, since such a class can't be instantiated in Kotlin.
