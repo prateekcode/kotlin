@@ -18,6 +18,7 @@
 #import "Memory.h"
 #include "Natives.h"
 #include "ObjCInterop.h"
+#include "KString.h"
 
 #if KONAN_OBJC_INTEROP
 
@@ -785,8 +786,14 @@ static const TypeInfo* createTypeInfo(
     }
   }
 
-  result->packageName_ = nullptr;  // "platform.Foundation"; // FIXME convert "const char *" to "ObjHeader*"
-  result->relativeName_ = nullptr; // class_getName(clazz);   // FIXME convert "const char *" to "ObjHeader*"
+  ObjHolder packageNameHolder;
+  CreateStringFromCString("FIXME", packageNameHolder.slot());
+  result->packageName_ = (ObjHeader*)CreateStablePointer(packageNameHolder.obj());
+
+  ObjHolder relNameHolder;
+  CreateStringFromCString(class_getName(clazz), relNameHolder.slot());
+  result->relativeName_ = (ObjHeader*)CreateStablePointer(relNameHolder.obj());
+
   result->writableInfo_ = (WritableTypeInfo*)std_support::calloc(1, sizeof(WritableTypeInfo));
 
   for (size_t i = 0; i < vtable.size(); ++i) result->vtable()[i] = vtable[i];
