@@ -392,9 +392,7 @@ internal val removeRedundantSafepointsPhase = makeKonanModuleOpPhase(
         name = "RemoveRedundantSafepoints",
         description = "Leave only one safepoint in a basic block",
         op = { context, _ ->
-            if (context.config.target.architecture == Architecture.ARM32 && context.config.target.family.isAppleFamily) {
-                RemoveRedundantSafepointsPass(context as LoggingContext).runOnModule(context.llvmModule!!)
-            }
+            RemoveRedundantSafepointsPass(context).runOnModule(context.llvmModule!!)
         }
 )
 
