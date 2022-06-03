@@ -512,7 +512,7 @@ abstract class CommonCompilerArguments : CommonToolArguments() {
             }
 
             if (allowAnyScriptsInSourceRoots) {
-                put(LanguageFeature.SkipUnsupportedScriptsInSourceRoots, LanguageFeature.State.DISABLED)
+                put(LanguageFeature.SkipStandaloneScriptsInSourceRoots, LanguageFeature.State.DISABLED)
             }
 
             // Internal arguments should go last, because it may be useful to override

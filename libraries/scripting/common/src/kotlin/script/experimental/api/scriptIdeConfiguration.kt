@@ -20,8 +20,8 @@ enum class ScriptAcceptedLocation {
     Sources,     // Under sources roots
     Tests,       // Under test sources roots
     Libraries,   // Under libraries classes or sources
-    Project,     // Under project folder, including sources and test sources roots
-    Everywhere;  // In any non-source root location
+    Project,     // Project infrastructure
+    Everywhere;  // All places in the project
 }
 
 val ScriptCompilationConfigurationKeys.ide

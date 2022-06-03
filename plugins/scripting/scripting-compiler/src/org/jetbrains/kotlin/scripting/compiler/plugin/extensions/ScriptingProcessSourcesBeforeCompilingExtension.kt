@@ -16,38 +16,37 @@ import org.jetbrains.kotlin.extensions.ProcessSourcesBeforeCompilingExtension
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.scripting.definitions.ScriptDefinitionProvider
 import org.jetbrains.kotlin.scripting.resolve.KtFileScriptSource
-import kotlin.script.experimental.api.ScriptAcceptedLocation
-import kotlin.script.experimental.api.ScriptCompilationConfiguration
-import kotlin.script.experimental.api.acceptedLocations
-import kotlin.script.experimental.api.ide
+import kotlin.script.experimental.api.*
 
 class ScriptingProcessSourcesBeforeCompilingExtension(val project: Project) : ProcessSourcesBeforeCompilingExtension {
 
     override fun processSources(sources: Collection<KtFile>, configuration: CompilerConfiguration): Collection<KtFile> {
         val versionSettings = configuration.languageVersionSettings
-        val optInAllowScriptsInSourceRoots = configuration.getBoolean(CommonConfigurationKeys.ALLOW_ANY_SCRIPTS_IN_SOURCE_ROOTS)
-        val shouldSkip = versionSettings.supportsFeature(LanguageFeature.SkipUnsupportedScriptsInSourceRoots)
+        val shouldSkipStandaloneScripts = versionSettings.supportsFeature(LanguageFeature.SkipStandaloneScriptsInSourceRoots)
         val definitionProvider by lazy(LazyThreadSafetyMode.NONE) { ScriptDefinitionProvider.getInstance(project) }
         val messageCollector = configuration.getNotNull(MESSAGE_COLLECTOR_KEY)
+
+        fun KtFile.isStandaloneScript(): Boolean {
+            val scriptDefinition = definitionProvider?.findDefinition(KtFileScriptSource(this))
+            return scriptDefinition?.compilationConfiguration?.get(ScriptCompilationConfiguration.isStandalone) ?: true
+        }
+
+        // filter out scripts that are not suitable for source roots, according to the compiler configuration and script definitions
         return sources.filter { ktFile ->
-            if (ktFile.isScript()) {
-                if (!optInAllowScriptsInSourceRoots) {
-                    val definition = definitionProvider?.findDefinition(KtFileScriptSource(ktFile))
-                    val isSourceRootCompatible =
-                        definition?.compilationConfiguration?.get(ScriptCompilationConfiguration.ide.acceptedLocations)?.let { locations ->
-                            locations.any {
-                                it == ScriptAcceptedLocation.Sources || it == ScriptAcceptedLocation.Tests
-                            }
-                        } ?: false
-                    if (!shouldSkip && !isSourceRootCompatible) {
+            when {
+                !ktFile.isScript() -> true
+                configuration.getBoolean(CommonConfigurationKeys.ALLOW_ANY_SCRIPTS_IN_SOURCE_ROOTS) -> true
+                !ktFile.isStandaloneScript() -> true
+                else -> {
+                    if (!shouldSkipStandaloneScripts) {
                         messageCollector.report(
                             CompilerMessageSeverity.WARNING,
                             "Script '${ktFile.name}' is not supposed to be used along with regular Kotlin sources, and will be ignored in the future versions"
                         )
                     }
-                    !shouldSkip || isSourceRootCompatible
-                } else true
-            } else true
+                    !shouldSkipStandaloneScripts
+                }
+            }
         }
     }
 }
