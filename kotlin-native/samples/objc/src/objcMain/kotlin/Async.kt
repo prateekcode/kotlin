@@ -60,8 +60,7 @@ object Continuator {
 
     fun wrap(operation: () -> Unit, after: () -> Unit): () -> Unit {
         assert(NSThread.isMainThread())
-        assert(operation.isFrozen)
-        val id = Any().freeze()
+        val id = Any()
         map[id] = Pair(0, after)
         return {
             initRuntimeIfNeeded()
@@ -69,13 +68,12 @@ object Continuator {
             executeAsync(NSOperationQueue.mainQueue) {
                 Pair(id, { id: Any -> Continuator.execute(id) })
             }
-        }.freeze()
+        }
     }
 
     fun <P> wrap(operation: () -> P, block: (P) -> Unit): () -> Unit {
         assert(NSThread.isMainThread())
-        assert(operation.isFrozen)
-        val id = Any().freeze()
+        val id = Any()
         map[id] = Pair(1, block)
         return {
             initRuntimeIfNeeded()
@@ -85,7 +83,7 @@ object Continuator {
                     Continuator.execute(it.first, it.second)
                 })
             }
-        }.freeze()
+        }
     }
 
     fun execute(id: Any) {

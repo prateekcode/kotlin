@@ -60,7 +60,7 @@ class Controller : NSObject() {
         // Here we call continuator service to ensure we can access mutable state from continuation.
 
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND.convert(), 0),
-                Continuator.wrap({ println("In queue ${dispatch_get_current_queue()}")}.freeze()) {
+                Continuator.wrap({ println("In queue ${dispatch_get_current_queue()}")}) {
             println("After in queue ${dispatch_get_current_queue()}: $index")
         })
 
@@ -89,10 +89,6 @@ class Controller : NSObject() {
     class HttpDelegate: NSObject(), NSURLSessionDataDelegateProtocol {
         private val asyncQueue = NSOperationQueue()
         private val receivedData = MutableData()
-
-        init {
-            freeze()
-        }
 
         fun fetchUrl(url: String) {
             receivedData.reset()

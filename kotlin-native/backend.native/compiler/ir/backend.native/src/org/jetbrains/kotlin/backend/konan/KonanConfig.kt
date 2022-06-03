@@ -127,7 +127,7 @@ class KonanConfig(val project: Project, val configuration: CompilerConfiguration
             }
             memoryModel == MemoryModel.EXPERIMENTAL && freezingMode != Freezing.Disabled -> {
                 // INFO because deprecation is currently ignorable via OptIn. Using WARNING will require silencing (for warnings-as-errors)
-                // by -opt-in compiler flag.
+                // by some compiler flag.
                 // TODO: When moving into proper deprecation cycle replace with WARNING.
                 configuration.report(
                         CompilerMessageSeverity.INFO,
