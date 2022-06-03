@@ -733,11 +733,10 @@ static ObjHeader* mallocStringFrom(const char* cstr) {
   size_t headerSize = alignUp(sizeof(ArrayHeader), alignof(char16_t));
   size_t arraySize = headerSize + count * sizeof(char16_t);
 
-  char* memBlock = (char*)malloc(arraySize);
-  ArrayHeader* header = (ArrayHeader*)memBlock;
+  ArrayHeader* header = (ArrayHeader*)malloc(arraySize);
   header->typeInfoOrMeta_ = (TypeInfo *)theStringTypeInfo;
   header->count_ = count;
-  char16_t* chars16 = (char16_t*)(memBlock + headerSize);
+  char16_t* chars16 = (char16_t*)((char*)header + headerSize);
   for (uint32_t index = 0; index < count; ++index) {
     *chars16++ = *cstr++;
   }
