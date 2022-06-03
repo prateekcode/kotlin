@@ -251,10 +251,10 @@ class K2JSCompilerArguments : CommonCompilerArguments() {
 
     @Argument(
             value = "-Xwasm-launcher",
-            valueDescription = "esm|nodejs|d8",
-            description = "Picks flavor for the wasm launcher. Default is ESM."
+            valueDescription = "esm|nodejs|d8|mjs",
+            description = "Picks flavor for the wasm launcher. Default is MJS."
     )
-    var wasmLauncher: String? by NullableStringFreezableVar("esm")
+    var wasmLauncher: String? by NullableStringFreezableVar("mjs")
 
     @Argument(value = "-Xwasm-kclass-fqn", description = "Enable support for FQ names in KClass")
     var wasmKClassFqn: Boolean by FreezableVar(false)

@@ -13,6 +13,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinJsCompilation
 import org.jetbrains.kotlin.gradle.targets.js.RequiredKotlinJsDependency
 import org.jetbrains.kotlin.gradle.targets.js.internal.parseNodeJsStackTraceAsJvm
 import org.jetbrains.kotlin.gradle.targets.js.isTeamCity
+import org.jetbrains.kotlin.gradle.targets.js.writeWasmUnitTestRunner
 
 internal class KotlinWasmNode(private val kotlinJsTest: KotlinJsTest) : KotlinJsTestFramework {
     override val settingsState: String = "KotlinWasmNode"
@@ -29,7 +30,7 @@ internal class KotlinWasmNode(private val kotlinJsTest: KotlinJsTest) : KotlinJs
         nodeJsArgs: MutableList<String>,
         debug: Boolean
     ): TCServiceMessagesTestExecutionSpec {
-        val compiledFile = task.inputFileProperty.get().asFile
+        val testRunnerFile = writeWasmUnitTestRunner(task.inputFileProperty.get().asFile)
 
         val clientSettings = TCServiceMessagesClientSettings(
             task.name,
@@ -47,22 +48,17 @@ internal class KotlinWasmNode(private val kotlinJsTest: KotlinJsTest) : KotlinJs
 
         val args = mutableListOf<String>()
         with(args) {
-            add("--experimental-wasm-typed-funcref")
             add("--experimental-wasm-gc")
             add("--experimental-wasm-eh")
-            add(compiledFile.absolutePath)
+            add(testRunnerFile.absolutePath)
             addAll(cliArgs.toList())
         }
-        val dryRunArgs = mutableListOf<String>()
-        dryRunArgs.addAll(args)
-        dryRunArgs.add("--dryRun")
-
         return TCServiceMessagesTestExecutionSpec(
             forkOptions = forkOptions,
             args = args,
             checkExitCode = false,
             clientSettings = clientSettings,
-            dryRunArgs = dryRunArgs
+            dryRunArgs = args + "--dryRun"
         )
     }
 

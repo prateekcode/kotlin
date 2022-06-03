@@ -36,5 +36,5 @@ open class KotlinD8Ir @Inject constructor(target: KotlinJsIrTarget) :
     }
 
     override val additionalCompilerOption: String?
-        get() = "-Xwasm-launcher=d8".takeIf { target.platformType == KotlinPlatformType.wasm }
+        get() = null
 }

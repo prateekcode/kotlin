@@ -45,5 +45,5 @@ open class KotlinNodeJsIr @Inject constructor(target: KotlinJsIrTarget) :
     }
 
     override val additionalCompilerOption: String?
-        get() = "-Xwasm-launcher=nodejs".takeIf { target.platformType == KotlinPlatformType.wasm }
+        get() = null
 }
