@@ -44,6 +44,7 @@
 #import "Runtime.h"
 #import "Mutex.hpp"
 #import "Exceptions.h"
+#import "Natives.h"
 #include "std_support/CStdlib.hpp"
 #include "std_support/Map.hpp"
 #include "std_support/String.hpp"
@@ -727,11 +728,20 @@ static void buildITable(TypeInfo* result, const std_support::map<ClassId, std_su
   }
 }
 
-static ObjHeader* createStableStringFromCString(const char* str) {
-  ObjHolder holder;
-  CreateStringFromCString(str, holder.slot());
-  CreateStablePointer(holder.obj());
-  return holder.obj();
+static ObjHeader* mallocStringFrom(const char* cstr) {
+  size_t count = strlen(cstr);
+  size_t headerSize = alignUp(sizeof(ArrayHeader), alignof(char16_t));
+  size_t arraySize = headerSize + count * sizeof(char16_t);
+
+  char* memBlock = (char*)malloc(arraySize);
+  ArrayHeader* header = (ArrayHeader*)memBlock;
+  header->typeInfoOrMeta_ = (TypeInfo *)theStringTypeInfo;
+  header->count_ = count;
+  char16_t* chars16 = (char16_t*)(memBlock + headerSize);
+  for (uint32_t index = 0; index < count; ++index) {
+    *chars16++ = *cstr++;
+  }
+  return header->obj();
 }
 
 static const TypeInfo* createTypeInfo(
@@ -793,8 +803,8 @@ static const TypeInfo* createTypeInfo(
     }
   }
 
-  result->packageName_ = createStableStringFromCString(""); // Obj-C classes have no package name. Empty string must be set then.
-  result->relativeName_ = createStableStringFromCString(className);
+  result->packageName_ = mallocStringFrom(""); // Obj-C classes have no package name. Empty string must be set then.
+  result->relativeName_ = mallocStringFrom(className);
   result->writableInfo_ = (WritableTypeInfo*)std_support::calloc(1, sizeof(WritableTypeInfo));
 
   for (size_t i = 0; i < vtable.size(); ++i) result->vtable()[i] = vtable[i];
