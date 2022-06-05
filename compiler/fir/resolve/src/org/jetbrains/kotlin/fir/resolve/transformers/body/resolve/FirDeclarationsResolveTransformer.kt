@@ -329,37 +329,17 @@ open class FirDeclarationsResolveTransformer(transformer: FirBodyResolveTransfor
 
         val provideDelegateCall = wrappedDelegateExpression.delegateProvider as FirFunctionCall
 
+        val originalCalleeReference = provideDelegateCall.calleeReference
+
         // Resolve call for provideDelegate, without completion
         provideDelegateCall.transformSingle(this, ResolutionMode.ContextIndependent)
-
-        // If we got successful candidate for provideDelegate, let's select it
-        val provideDelegateCandidate = provideDelegateCall.candidate()
-        if (provideDelegateCandidate != null && provideDelegateCandidate.isSuccessful) {
-            val system = provideDelegateCandidate.system
-            system.notFixedTypeVariables.forEach {
-                system.markPostponedVariable(it.value.typeVariable)
-            }
-            val typeVariableTypeToStubType = context.inferenceSession.createSyntheticStubTypes(system)
-            val substitutor = createTypeSubstitutorByTypeConstructor(
-                typeVariableTypeToStubType, session.typeContext, approximateIntegerLiterals = true
-            )
-
-            val stubTypeSubstituted = substitutor.substituteOrSelf(
-                provideDelegateCandidate.substitutor.substituteOrSelf(
-                    components.typeFromCallee(provideDelegateCall).type
-                )
-            )
-
-            provideDelegateCall.replaceTypeRef(provideDelegateCall.typeRef.resolvedTypeFromPrototype(stubTypeSubstituted))
-            return provideDelegateCall
-        }
 
         if (provideDelegateCall.calleeReference is FirResolvedNamedReference) {
             return provideDelegateCall
         }
 
-        // Otherwise, rollback
-        (provideDelegateCall as? FirFunctionCall)?.let { dataFlowAnalyzer.dropSubgraphFromCall(it) }
+        // Otherwise, rollback (get rid of FirErrorTypeRef)
+        provideDelegateCall.replaceCalleeReference(originalCalleeReference)
 
         // Select delegate expression otherwise
         return delegateExpression
